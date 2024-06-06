@@ -1,0 +1,86 @@
+package main
+
+import (
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"io"
+	"os"
+	"flag"
+)
+
+
+func GenerateKey(filename string) ([]byte, error) {
+	key := make([]byte, 32) // AES256 key size
+	if _, err := rand.Read(key); err != nil {
+		return nil, err
+	}
+	err := os.WriteFile(filename, key, 0644)
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
+}
+
+
+
+
+// Encrypt encrypts a file using AES256 encryption.
+func Encrypt(key []byte, plaintextFile string, ciphertextFile string) error {
+	plaintext, err := os.ReadFile(plaintextFile)
+	if err != nil {
+		return err
+	}
+
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return err
+	}
+
+	ciphertext := make([]byte, aes.BlockSize+len(plaintext))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return err
+	}
+
+	stream := cipher.NewCFBEncrypter(block, iv)
+	stream.XORKeyStream(ciphertext[aes.BlockSize:], plaintext)
+
+	return os.WriteFile(ciphertextFile, ciphertext, 0644)
+}
+
+
+func main() {
+
+	var(
+	inputfile string
+	cleanup bool
+    )
+
+    flag.StringVar(&inputfile, "i", "", "input file")
+	flag.BoolVar(&cleanup, "clean", false, "cleanup")
+
+	flag.Parse()
+	keyFilename := "keyfile.key"
+
+	var key []byte
+	if _, err := os.Stat(keyFilename); os.IsNotExist(err) {
+		key, err = GenerateKey(keyFilename)
+		if err != nil {
+			panic(err)
+		}
+	}
+
+	err := Encrypt(key, inputfile, "encrypted.bin")
+	if err != nil {
+		panic(err)
+	}
+
+	if cleanup {
+		err = os.Remove(inputfile)
+        if err!= nil {
+            panic(err)
+        }
+	}
+
+}
