@@ -11,7 +11,7 @@ To build the `encrypt` and `decrypt` programs, follow these steps:
 3. Build each program using the `go build` command.
 
 
-go build -o encrypt encrypt.go
+go build -o encrypt encrypt.go, 
 go build -o decrypt decrypt.go
 
 
