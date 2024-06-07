@@ -1,1 +1,52 @@
-*.sh
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Go workspace file
+go.work
+
+# Go build artifacts
+*.o
+*.a
+*.log
+
+# Compiled object files
+*.obj
+
+# Go binary executable
+*.exe
+
+# Packages
+vendor/
+*.mod
+*.sum
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Text files
+*.txt
+
+# Other binaries
+*.bin
+
+# User-specific files
+*.local/
+*.env
+
