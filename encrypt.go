@@ -70,6 +70,7 @@ func Encrypt(key []byte, salt []byte, plaintextFile string, ciphertextFile strin
 }
 
 func main() {
+
 	var (
 		inputfile string
 		cleanup   bool
@@ -89,6 +90,11 @@ func main() {
 	}
 
 	flag.Parse()
+
+	if len(os.Args) < 2 {
+		flag.Usage()
+        os.Exit(1)
+	}
 
 	keyFilename := "keyfile.key"
 
