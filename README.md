@@ -1,5 +1,3 @@
-
-```markdown
 # File Encryption and Decryption Tools
 
 This repository contains two Go programs for file encryption and decryption using AES256. The `encrypt` program encrypts a file, while the `decrypt` program decrypts an encrypted file. Each program needs to be built separately.
@@ -12,17 +10,17 @@ To build the `encrypt` and `decrypt` programs, follow these steps:
 2. Open a terminal and navigate to the directory containing the source files.
 3. Build each program using the `go build` command.
 
-```sh
+
 go build -o encrypt encrypt.go
 go build -o decrypt decrypt.go
-```
+
 
 4. Move the built executables to `/usr/bin` to use them globally, or run them locally using `./`.
 
-```sh
+
 sudo mv encrypt /usr/bin/encrypt
 sudo mv decrypt /usr/bin/decrypt
-```
+
 
 ## Usage
 
@@ -39,7 +37,7 @@ The `encrypt` program encrypts a file using AES256 encryption. You can provide a
 
 #### Examples
 
-```sh
+
 # Encrypt a file with a password
 encrypt -i plaintext.txt -p mypassword
 
@@ -51,7 +49,7 @@ encrypt -i plaintext.txt -clean
 
 # Encrypt a file and specify a key file
 encrypt -i plaintext.txt -kf mykeyfile.key
-```
+
 
 ### Decrypt
 
@@ -67,7 +65,7 @@ The `decrypt` program decrypts an encrypted file using AES256 encryption. You ca
 
 #### Examples
 
-```sh
+
 # Decrypt a file with a password
 decrypt -i encrypted.bin -o plaintext.txt -p mypassword
 
@@ -76,13 +74,9 @@ decrypt -i encrypted.bin -o plaintext.txt -k mykeyfile.key
 
 # Decrypt a file and delete the encrypted file and key file
 decrypt -i encrypted.bin -o plaintext.txt -clean -k mykeyfile.key
-```
 
 ## Notes
 
 - Ensure that the key file and input file exist and are accessible when running the programs.
 - Handle the generated encryption keys securely and avoid sharing them publicly.
 - The salt used for key derivation is stored in the ciphertext file, so the same password can be used to decrypt the file.
-```
-
-This `README.md` file provides a comprehensive guide on how to build and use the `encrypt` and `decrypt` programs, including details on the available flags and example commands for different use cases.
