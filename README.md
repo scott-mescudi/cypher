@@ -1,82 +1,120 @@
-# File Encryption and Decryption Tools
+# Encryption and Decryption cli
 
-This repository contains two Go programs for file encryption and decryption using AES256. The `encrypt` program encrypts a file, while the `decrypt` program decrypts an encrypted file. Each program needs to be built separately.
+## Overview
 
-## Building the Programs
+This repository contains two Go programs for file encryption and decryption:
 
-To build the `encrypt` and `decrypt` programs, follow these steps:
+- `encrypt.go`: Encrypts files using AES256 encryption.
+- `decrypt.go`: Decrypts files encrypted by `encrypt.go`.
 
-1. Clone the repository or download the source files.
-2. Open a terminal and navigate to the directory containing the source files.
-3. Build each program using the `go build` command.
+Both programs support the use of a user-specified password for encryption/decryption and the generation of a random AES256 key.
 
+## Features
 
-go build -o encrypt encrypt.go, 
-go build -o decrypt decrypt.go
+### `encrypt.go`
 
+- Generates an AES256 key and saves it to a file.
+- Encrypts files using AES256 encryption.
+- Supports encryption of individual files or entire directories.
+- Supports key generation from a password using PBKDF2 (optional).
+- Cleans up original files after encryption if specified.
 
-4. Move the built executables to `/usr/bin` to use them globally, or run them locally using `./`.
+### `decrypt.go`
 
+- Decrypts files encrypted by `encrypt.go`.
+- Supports decryption of individual files or entire directories.
+- Supports decryption using a password-derived key (optional).
+- Cleans up encrypted files after decryption if specified.
 
-sudo mv encrypt /usr/bin/encrypt
-sudo mv decrypt /usr/bin/decrypt
+## Installation
 
+### Prerequisites
+
+- [Go](https://golang.org/dl/) (version 1.16 or later)
+
+### Build
+
+To build the programs, navigate to the directory containing the `.go` files and run:
+
+```bash
+go build encrypt.go
+go build decrypt.go
+```
+
+This will create two executables: `encrypt` and `decrypt`.
 
 ## Usage
 
-### Encrypt
+### `encrypt`
 
-The `encrypt` program encrypts a file using AES256 encryption. You can provide a password to derive the encryption key or generate a random key.
+Encrypt a single file:
 
-#### Flags
+```bash
+./encrypt -i <input_file> -o <output_file> [-k <key_file>] [-p <password>] [-c]
+```
 
-- `-i` : Input file to encrypt (required).
-- `-clean` : Delete the input file after encryption (optional).
-- `-p` : Password to derive the encryption key (optional).
-- `-kf` : File to store/load the encryption key (optional).
+Encrypt all files in a directory:
 
-#### Examples
-
-
-# Encrypt a file with a password
-encrypt -i plaintext.txt -p mypassword
-
-# Encrypt a file with a random key
-encrypt -i plaintext.txt
-
-# Encrypt a file and delete the original
-encrypt -i plaintext.txt -clean
-
-# Encrypt a file and specify a key file
-encrypt -i plaintext.txt -kf mykeyfile.key
-
-
-### Decrypt
-
-The `decrypt` program decrypts an encrypted file using AES256 encryption. You can provide a password to derive the decryption key or read the key from a file.
+```bash
+./encrypt -dir <directory> [-k <key_file>] [-p <password>] [-c]
+```
 
 #### Flags
 
-- `-i` : Input file to decrypt (required).
-- `-o` : Output file for decrypted data (required).
-- `-k` : File to read the encryption key from (optional).
-- `-clean` : Delete the input and key files after decryption (optional).
-- `-p` : Password to derive the decryption key (optional).
+- `-i <input_file>`: Input file to encrypt.
+- `-o <output_file>`: Output file for encrypted data.
+- `-k <key_file>`: File to read/write the encryption key. Defaults to `keyfile.key`.
+- `-p <password>`: (Optional) Password to derive the encryption key.
+- `-dir <directory>`: Directory containing files to encrypt.
+- `-c`: Clean up (delete) the original files after encryption.
 
-#### Examples
+### `decrypt`
 
+Decrypt a single file:
 
-# Decrypt a file with a password
-decrypt -i encrypted.bin -o plaintext.txt -p mypassword
+```bash
+./decrypt -i <input_file> -o <output_file> [-k <key_file>] [-p <password>] [-c]
+```
 
-# Decrypt a file with a key file
-decrypt -i encrypted.bin -o plaintext.txt -k mykeyfile.key
+Decrypt all files in a directory:
 
-# Decrypt a file and delete the encrypted file and key file
-decrypt -i encrypted.bin -o plaintext.txt -clean -k mykeyfile.key
+```bash
+./decrypt -dir <directory> [-k <key_file>] [-p <password>] [-c]
+```
 
-## Notes
+#### Flags
 
-- Ensure that the key file and input file exist and are accessible when running the programs.
-- Handle the generated encryption keys securely and avoid sharing them publicly.
-- The salt used for key derivation is stored in the ciphertext file, so the same password can be used to decrypt the file.
+- `-i <input_file>`: Input file to decrypt.
+- `-o <output_file>`: Output file for decrypted data.
+- `-k <key_file>`: File to read the decryption key from. Defaults to `keyfile.key`.
+- `-p <password>`: (Optional) Password to derive the decryption key.
+- `-dir <directory>`: Directory containing files to decrypt.
+- `-c`: Clean up (delete) the encrypted files after decryption.
+
+## Deployment
+
+To make the executables globally available, move them to a directory that is included in your system's PATH.
+
+### Linux/macOS
+
+```bash
+sudo mv encrypt /usr/local/bin/
+sudo mv decrypt /usr/local/bin/
+```
+
+### Windows
+
+Move the `encrypt.exe` and `decrypt.exe` files to a directory included in your PATH. For example, `C:\Windows\System32`.
+
+```cmd
+move encrypt.exe C:\Windows\System32
+move decrypt.exe C:\Windows\System32
+```
+
+## License
+
+This project is licensed under the MIT License.
+
+## Contributing
+
+Contributions are welcome! Please submit a pull request or open an issue to discuss changes.
