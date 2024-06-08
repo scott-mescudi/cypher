@@ -160,9 +160,14 @@ func main() {
 			nameWithoutExt := strings.TrimSuffix(file, ext)
 			newFileName := nameWithoutExt + ".txt"
 
-			err = Decrypt(key, filepath.Join(directory, file), filepath.Join(directory, newFileName))
-			if err != nil {
-				fmt.Println(err, "157")
+            extE := filepath.Ext(file)
+			if extE == ".bin" {
+				err = Decrypt(key, filepath.Join(directory, file), filepath.Join(directory, newFileName))
+				if err != nil {
+					fmt.Println(err, "157")
+				}
+		    }else{
+				fmt.Printf("file '%s' is not encrypted\n", file)
 			}
 		}
 
