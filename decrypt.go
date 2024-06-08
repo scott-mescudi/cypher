@@ -97,7 +97,7 @@ func main() {
 
 	flag.StringVar(&inputfile, "f", "", "input file to decrypt")
 	flag.StringVar(&outputfile, "o", "", "output file for decrypted data")
-	flag.StringVar(&keyfile, "k", "", "file to read the encryption key from")
+	flag.StringVar(&keyfile, "kf", "", "file to read the encryption key from")
 	flag.BoolVar(&cleanup, "clean", false, "delete the input and key files after decryption")
 	flag.StringVar(&userkey, "p", "", "password to derive the decryption key")
 	flag.StringVar(&directory, "dir", "", "directory to decrypt")
