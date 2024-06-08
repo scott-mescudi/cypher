@@ -4,12 +4,14 @@ import (
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/rand"
+	"crypto/sha256"
 	"flag"
 	"fmt"
-	"golang.org/x/crypto/pbkdf2"
-	"crypto/sha256"
 	"io"
 	"os"
+	"path/filepath"
+	"strings"
+	"golang.org/x/crypto/pbkdf2"
 )
 
 // GenerateKey generates a random AES256 key and writes it to a file.
@@ -40,6 +42,34 @@ func GenerateUserKey(filename, password string) ([]byte, []byte, error) {
 		return nil, nil, err
 	}
 	return key, salt, nil
+}
+func read_dir(dir string) ([]string, error) {
+
+	var files []string = []string{}
+ 
+    items, err := os.ReadDir(dir)
+    if err != nil {
+        fmt.Println(err)
+    }
+
+    for _, item := range items {
+        if item.IsDir() {
+            subitems, err := os.ReadDir(filepath.Join(dir, item.Name()))
+            if err != nil {
+                fmt.Printf("failed to read subdirectory %s: %v\n", item.Name(), err)
+                continue
+            }
+            for _, subitem := range subitems {
+                if !subitem.IsDir() {
+                    fin := (filepath.Join(item.Name(), subitem.Name()))
+					files = append(files, fin)
+                }
+            }
+        } else {
+            files = append(files, item.Name())
+        }
+    }
+    return files, nil
 }
 
 // Encrypt encrypts a file using AES256 encryption.
@@ -76,12 +106,15 @@ func main() {
 		cleanup   bool
 		userkey   string
 		keyfile   string
+		directory string
 	)
 
-	flag.StringVar(&inputfile, "i", "", "input file to encrypt")
+	flag.StringVar(&inputfile, "f", "", "input file to encrypt")
 	flag.BoolVar(&cleanup, "clean", false, "delete the input file after encryption")
 	flag.StringVar(&userkey, "p", "", "password to derive the encryption key")
 	flag.StringVar(&keyfile, "kf", "", "file to store/load the encryption key")
+	flag.StringVar(&directory, "dir", "", "directory to encrypt")
+
 
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage of %s:\n", os.Args[0])
@@ -96,11 +129,18 @@ func main() {
         os.Exit(1)
 	}
 
-	keyFilename := "keyfile.key"
-
+	
+//arg handling
 	var key []byte
 	var salt []byte
 	var err error
+
+	keyFilename := "keyfile.key"
+
+	if userkey !=  "" && directory != "" {
+	fmt.Println("Error: -p flag cannot be used with -dir")
+	os.Exit(3)
+    }
 
 	if keyfile != "" {
 		keyFilename = keyfile
@@ -121,7 +161,38 @@ func main() {
 		}
 	}
 
-	err = Encrypt(key, salt, inputfile, "encrypted.bin")
+	if directory != "" {
+	files, err := read_dir(directory)
+	if err != nil {
+		panic(err)
+	}
+	for _, file := range files {
+		ext := filepath.Ext(file)
+		nameWithoutExt := strings.TrimSuffix(file, ext)
+		newFileName := nameWithoutExt + ".bin"
+
+		err = Encrypt(key, salt, filepath.Join(directory, file), filepath.Join(directory, newFileName))
+		if err != nil {
+			panic(err)
+		}
+	}
+
+    if cleanup {
+		for _, file := range files {
+			ext := filepath.Ext(file)
+			if ext != ".bin" {
+				err = os.Remove(filepath.Join(directory, file))
+				if err != nil {
+					panic(err)
+				}
+			}
+		}
+	}
+} else {
+	ext := filepath.Ext(inputfile)
+	nameWithoutExt := strings.TrimSuffix(inputfile, ext)
+	newFileName := nameWithoutExt + ".bin"
+	err := Encrypt(key, salt, inputfile, newFileName)
 	if err != nil {
 		panic(err)
 	}
@@ -132,5 +203,6 @@ func main() {
 			panic(err)
 		}
 	}
+}
 }
 
