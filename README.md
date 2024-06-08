@@ -50,46 +50,45 @@ This will create two executables: `encrypt` and `decrypt`.
 Encrypt a single file:
 
 ```bash
-./encrypt -i <input_file> -o <output_file> [-k <key_file>] [-p <password>] [-c]
+./encrypt -f <input_file>  [-kf <key_file>] [-p <password>] [-clean]
 ```
 
 Encrypt all files in a directory:
 
 ```bash
-./encrypt -dir <directory> [-k <key_file>] [-p <password>] [-c]
+./encrypt -dir <directory> [-kf <key_file>] [-p <password>] [-clean]
 ```
 
 #### Flags
 
-- `-i <input_file>`: Input file to encrypt.
-- `-o <output_file>`: Output file for encrypted data.
-- `-k <key_file>`: File to read/write the encryption key. Defaults to `keyfile.key`.
+- `-f <input_file>`: Input file to encrypt.
+- `-kf <key_file>`: File to read/write the encryption key. Defaults to `keyfile.key`.
 - `-p <password>`: (Optional) Password to derive the encryption key.
 - `-dir <directory>`: Directory containing files to encrypt.
-- `-c`: Clean up (delete) the original files after encryption.
+- `-clean`: Clean up (delete) the original files after encryption.
 
 ### `decrypt`
 
 Decrypt a single file:
 
 ```bash
-./decrypt -i <input_file> -o <output_file> [-k <key_file>] [-p <password>] [-c]
+./decrypt -f <input_file> -o <output_file> [-kf <key_file>] [-p <password>] [-clean]
 ```
 
 Decrypt all files in a directory:
 
 ```bash
-./decrypt -dir <directory> [-k <key_file>] [-p <password>] [-c]
+./decrypt -dir <directory> [-kf <key_file>] [-p <password>] [-clean]
 ```
 
 #### Flags
 
-- `-i <input_file>`: Input file to decrypt.
+- `-f <input_file>`: Input file to decrypt.
 - `-o <output_file>`: Output file for decrypted data.
-- `-k <key_file>`: File to read the decryption key from. Defaults to `keyfile.key`.
+- `-kf <key_file>`: File to read the decryption key from. Defaults to `keyfile.key`.
 - `-p <password>`: (Optional) Password to derive the decryption key.
 - `-dir <directory>`: Directory containing files to decrypt.
-- `-c`: Clean up (delete) the encrypted files after decryption.
+- `-clean`: Clean up (delete) the encrypted files after decryption.
 
 ## Deployment
 
