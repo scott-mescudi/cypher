@@ -1,5 +1,3 @@
-module github.com/scott-mescudi/encryption_cli
+module github.com/scott-mescudi/cypher.git
 
 go 1.22.3
-
-require golang.org/x/crypto v0.24.0

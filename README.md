@@ -16,14 +16,12 @@ Both programs support the use of a user-specified password for encryption/decryp
 - Generates an AES256 key and saves it to a file.
 - Encrypts files using AES256 encryption.
 - Supports encryption of individual files or entire directories.
-- Supports key generation from a password using PBKDF2 (optional).
 - Cleans up original files after encryption if specified.
 
 ### `decrypt.go`
 
 - Decrypts files encrypted by `encrypt.go`.
 - Supports decryption of individual files or entire directories.
-- Supports decryption using a password-derived key (optional).
 - Cleans up encrypted files after decryption if specified.
 
 ## Installation
@@ -50,20 +48,19 @@ This will create two executables: `encrypt` and `decrypt`.
 Encrypt a single file:
 
 ```bash
-./encrypt -f <input_file>  [-kf <key_file>] [-p <password>] [-clean]
+./encrypt -f <input_file>  [-kf <key_file>] [-clean]
 ```
 
 Encrypt all files in a directory:
 
 ```bash
-./encrypt -dir <directory> [-kf <key_file>] [-p <password>] [-clean]
+./encrypt -dir <directory> [-kf <key_file>] [-clean]
 ```
 
 #### Flags
 
 - `-f <input_file>`: Input file to encrypt.
 - `-kf <key_file>`: File to read/write the encryption key. Defaults to `keyfile.key`.
-- `-p <password>`: (Optional) Password to derive the encryption key.
 - `-dir <directory>`: Directory containing files to encrypt.
 - `-clean`: Clean up (delete) the original files after encryption.
 
@@ -72,21 +69,19 @@ Encrypt all files in a directory:
 Decrypt a single file:
 
 ```bash
-./decrypt -f <input_file> -o <output_file> [-kf <key_file>] [-p <password>] [-clean]
+./decrypt -f <input_file> [-kf <key_file>] [-clean]
 ```
 
 Decrypt all files in a directory:
 
 ```bash
-./decrypt -dir <directory> [-kf <key_file>] [-p <password>] [-clean]
+./decrypt -dir <directory> [-kf <key_file>] [-clean]
 ```
 
 #### Flags
 
 - `-f <input_file>`: Input file to decrypt.
-- `-o <output_file>`: Output file for decrypted data.
 - `-kf <key_file>`: File to read the decryption key from. Defaults to `keyfile.key`.
-- `-p <password>`: (Optional) Password to derive the decryption key.
 - `-dir <directory>`: Directory containing files to decrypt.
 - `-clean`: Clean up (delete) the encrypted files after decryption.
 
