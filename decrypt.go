@@ -95,35 +95,16 @@ func decryptdir(key []byte, dir string, clean bool) error {
 
     //loop through all items in directory
 	for _, item := range items {
+		fullpath := filepath.Join(dir, item.Name())
 		if item.IsDir() {
-			subitems, err := os.ReadDir(filepath.Join(dir, item.Name()))
-			if err != nil {
-				fmt.Printf("[-] failed to read subdirectory %s: %v\n", item.Name(), err)
-				continue
-			}
-			for _, subitem := range subitems {
-				if !subitem.IsDir() {
-					sub := filepath.Join(dir, item.Name(), subitem.Name())
-					ext := filepath.Ext(subitem.Name())
-					//filtering files
-					switch ext {
-					case ".bin":
-                        err = decryptData(key, sub, clean)
-                        if err != nil {
-                            return err
-						}
-                        
-					default:
-						fmt.Printf("[-] %v is not encrypted\n", sub)
-					}
-				}
+			if err := decryptdir(key, fullpath, clean); err!= nil {
+				return err
 			}
 		} else {
 			ext := filepath.Ext(item.Name())
-			//filtering files
 			switch ext {
 			case ".bin":
-				err = decryptData(key,filepath.Join(dir, item.Name()), clean)
+				err = decryptData(key,fullpath, clean)
 				if err != nil {
 					return err
 				}
@@ -135,6 +116,8 @@ func decryptdir(key []byte, dir string, clean bool) error {
 	}
 	return nil
 }
+
+
 
 func main() {
 	var(
