@@ -48,13 +48,13 @@ This will create two executables: `encrypt` and `decrypt`.
 Encrypt a single file:
 
 ```bash
-./encrypt -f <input_file>  [-kf <key_file>] [-clean]
+encrypt -f <input_file>  [-kf <key_file>] [-clean]
 ```
 
 Encrypt all files in a directory:
 
 ```bash
-./encrypt -dir <directory> [-kf <key_file>] [-clean]
+encrypt -dir <directory> [-kf <key_file>] [-clean]
 ```
 
 #### Flags
@@ -69,13 +69,13 @@ Encrypt all files in a directory:
 Decrypt a single file:
 
 ```bash
-./decrypt -f <input_file> [-kf <key_file>] [-clean]
+decrypt -f <input_file> [-kf <key_file>] [-clean]
 ```
 
 Decrypt all files in a directory:
 
 ```bash
-./decrypt -dir <directory> [-kf <key_file>] [-clean]
+decrypt -dir <directory> [-kf <key_file>] [-clean]
 ```
 
 #### Flags
