@@ -1,4 +1,4 @@
- package main
+package main
 
 import (
 	"crypto/aes"
@@ -13,80 +13,81 @@ import (
 )
 
 func generateRandomKey() ([]byte, error) {
-	// Create a new AES cipher block
 	key := make([]byte, 32)
 	if _, err := rand.Read(key); err != nil {
 		return nil, err
 	}
-    
-	// Write the key to a file
 	err := os.WriteFile("KEYFILE.key", key, 0444)
 	if err != nil {
 		return nil, err
 	}
-
 	return key, nil
 }
 
 func readKey(keyfile string) ([]byte, error) {
-	// Read the key from a file
 	key, err := os.ReadFile(keyfile)
-    if err != nil {
-        return nil, err
-    }
-
-    return key, nil
+	if err != nil {
+		return nil, err
+	}
+	return key, nil
 }
 
-
-
 func encryptData(key []byte, filename string, clean bool) error {
-	// Read the file content
-	plaintext, err := os.ReadFile(filename)
+	file, err := os.Open(filename)
 	if err != nil {
 		return fmt.Errorf("error reading file: %w", err)
 	}
+	defer file.Close()
 
-	// Get the file extension
-	ext := filepath.Ext(filename)
-	// Concatenate the plaintext with a newline and the file extension
-	plaintextWithExt := append(plaintext, []byte("\n"+ext)...)
-
-	// Create a new AES cipher block
 	block, err := aes.NewCipher(key)
 	if err != nil {
 		return err
 	}
 
-	// Create a new GCM cipher
 	gcm, err := cipher.NewGCM(block)
 	if err != nil {
 		return err
 	}
 
-	// Generate a random nonce
-	nonce := make([]byte, gcm.NonceSize())
-	if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
-		return err
-	}
-
-	// Encrypt the concatenated data
-	ciphertext := gcm.Seal(nonce, nonce, plaintextWithExt, nil) // Prepend nonce to ciphertext
-
-	// Create the new filename with .bin extension
+	nonceSize := gcm.NonceSize()
+	ext := filepath.Ext(filename)
 	nameWithoutExt := strings.TrimSuffix(filename, ext)
 	newFileName := nameWithoutExt + ".bin"
-
-	// Write the ciphertext to the new file
-	err = os.WriteFile(newFileName, ciphertext, 0600)
+	outFile, err := os.Create(newFileName)
 	if err != nil {
 		return err
 	}
+	defer outFile.Close()
 
-	// Optionally, remove the original file if the clean flag is set
+	buffer := make([]byte, 64*1024) // 64KB buffer
+	for {
+		n, err := file.Read(buffer)
+		if err != nil && err != io.EOF {
+			return fmt.Errorf("error reading file: %w", err)
+		}
+		if n == 0 {
+			break
+		}
+
+		// Get the file extension
+	    ext := filepath.Ext(filename)
+	
+
+		chunk := buffer[:n]
+		plaintextWithExt := append(chunk, []byte("\n"+ext)...)
+		nonce := make([]byte, nonceSize)
+		if _, err := io.ReadFull(rand.Reader, nonce); err != nil {
+			return err
+		}
+
+		ciphertext := gcm.Seal(nonce, nonce, plaintextWithExt, nil)
+		if _, err := outFile.Write(ciphertext); err != nil {
+			return err
+		}
+	}
+
 	if clean {
-		err := os.Remove(filename)
-		if err != nil {
+		if err := os.Remove(filename); err != nil {
 			return fmt.Errorf("error removing original file: %w", err)
 		}
 	}
@@ -94,39 +95,29 @@ func encryptData(key []byte, filename string, clean bool) error {
 	return nil
 }
 
-
-
-func encrypt_directory(key []byte, dir string, clean bool) error {
-	//open directory
+func encryptDirectory(key []byte, dir string, clean bool) error {
 	items, err := os.ReadDir(dir)
 	if err != nil {
 		return err
 	}
 
-
-    //loop through all items in directory
 	for _, item := range items {
-		fullpath := filepath.Join(dir, item.Name())
+		fullPath := filepath.Join(dir, item.Name())
 		if item.IsDir() {
-			if err := encrypt_directory(key, fullpath, clean); err!= nil {
-				return err
+			if err := encryptDirectory(key, fullPath, clean); err != nil {
+				fmt.Println("[-]Failed to walk directory")
 			}
 		} else {
-			//filtering files
 			ext := filepath.Ext(item.Name())
 			switch ext {
-
 			case ".bin":
 				fmt.Printf("[-] %v is already encrypted\n", item.Name())
-			 
 			case ".key":
 				fmt.Printf("[-] Cannot encrypt keyfile %v\n", item.Name())
-			
 			default:
-				err = encryptData(key, fullpath, clean)
-				if err != nil {
-                    return err
-                }
+				if err := encryptData(key, fullPath, clean); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -134,130 +125,108 @@ func encrypt_directory(key []byte, dir string, clean bool) error {
 }
 
 func main() {
-	var(
-        err error
-		clean bool = false
-		dir string
+	var (
+		err      error
+		clean    bool
+		dir      string
 		filename string
-		help bool
-		version bool
-		key []byte
-		keyfile string
+		help     bool
+		version  bool
+		key      []byte
+		keyfile  string
 	)
-
 
 	flag.BoolVar(&clean, "clean", false, "remove original file after encryption")
 	flag.BoolVar(&help, "h", false, "show help")
 	flag.BoolVar(&version, "v", false, "show version")
 	flag.StringVar(&dir, "dir", "", "directory to encrypt")
 	flag.StringVar(&filename, "f", "", "file to encrypt")
-	flag.StringVar(&keyfile, "kf", "", "encrypt usng existing keyfile")
-	
+	flag.StringVar(&keyfile, "kf", "", "encrypt using existing keyfile")
+
 	flag.Parse()
 
 	if len(os.Args) < 2 {
 		flag.Usage()
-        os.Exit(1)
+		os.Exit(1)
 	}
 
-	//check for file/dir
-	if dir!= "" {
-		if _, err = os.Stat(dir); err!= nil {
+	if dir != "" {
+		if _, err = os.Stat(dir); err != nil {
 			fmt.Println("[-] Directory not found. Exiting...")
 			os.Exit(6)
 		}
-    }else if filename!= "" {
-		if _, err = os.Stat(filename); err!= nil {
+	} else if filename != "" {
+		if _, err = os.Stat(filename); err != nil {
 			fmt.Println("[-] File not found. Exiting...")
 			os.Exit(5)
 		}
 	}
 
-
-    
-	//basic flag handling
 	if help {
-        flag.Usage()
-        os.Exit(1)
-    }
+		flag.Usage()
+		os.Exit(1)
+	}
 
 	if version {
-        fmt.Println("[v] version == 2.0.0")
-        os.Exit(2)
-    }
-
-	if clean{
-		clean = true
+		fmt.Println("[v] version == 2.0.0")
+		os.Exit(2)
 	}
-    
 
-    //keyfile handling
-	if _, err = os.Stat("KEYFILE.key"); err != nil {
-		fmt.Println("[-] No key file found. Generating a new keyfile...")
-		Genkey, err := generateRandomKey()
-        if err!= nil {
-            fmt.Println("[-] Error generating keyfile: ", err)
-			os.Exit(3)
-        }else{
-			key = Genkey
-		}
-	}else{
-		fmt.Println("[-] looking for default keyfile...")
-		Readkey, err := readKey("KEYFILE.key")
-		if err!= nil {
-			fmt.Println("[-] Default keyfile not found. Exiting...")
+	if keyfile != "" {
+		key, err = readKey(keyfile)
+		if err != nil {
+			fmt.Println("[-] Keyfile not found or invalid. Exiting...")
 			os.Exit(4)
-		}else{
+		} else {
+			fmt.Println("[+] Key file found. Reading keyfile...")
+		}
+	} else {
+		if _, err = os.Stat("KEYFILE.key"); err != nil {
+			fmt.Println("[-] No key file found. Generating a new keyfile...")
+			key, err = generateRandomKey()
+			if err != nil {
+				fmt.Println("[-] Error generating keyfile: ", err)
+				os.Exit(3)
+			}
+		} else {
 			fmt.Println("[+] Default keyfile found. Reading keyfile...")
-			key = Readkey
-		}   
-	}
-
-	if keyfile!= "" {
-		Readkey, err := readKey(keyfile)
-        if err!= nil {
-            fmt.Println("[-] No keyfile found. Exiting...")
-			os.Exit(4)
-        }else{
-		    fmt.Println("[+] Key file found. Reading keyfile...")
-			key = Readkey
+			key, err = readKey("KEYFILE.key")
+			if err != nil {
+				fmt.Println("[-] Default keyfile not found. Exiting...")
+				os.Exit(4)
+			}
 		}
 	}
 
-
-    //single file encryption
-	if filename!= "" {
+	if filename != "" {
 		err = encryptData(key, filename, clean)
-        if err!= nil {
-            fmt.Println("[+] Error encrypting file: ", err)
-        }else{
+		if err != nil {
+			fmt.Println("[+] Error encrypting file: ", err)
+		} else {
 			fmt.Println("[+] File encryption complete.")
 		}
 
-		if clean{
+		if clean {
 			fmt.Println("[+] Original file removed.")
 		}
 	}
 
-
-    //directory encryption
-	if dir!= "" {
-		if dir == "/" || dir == "/home"{
+	if dir != "" {
+		if dir == "/" || dir == "/home" {
 			fmt.Println("[-] Cannot encrypt root directory. Exiting...")
-            os.Exit(5)
+			os.Exit(5)
 		}
 
-		err = encrypt_directory(key, dir, clean)
-        if err!= nil {
-            fmt.Println("[-] error encrypting directory: ", err)
+		err = encryptDirectory(key, dir, clean)
+		if err != nil {
+			fmt.Println("[-] Error encrypting directory: ", err)
 			os.Exit(7)
-        }else{
-            fmt.Println("\n[+] Directory encryption complete.")
-        }
+		} else {
+			fmt.Println("\n[+] Directory encryption complete.")
+		}
 
-        if clean{
-            fmt.Println("[+] Original files in directory removed.")
-        }
+		if clean {
+			fmt.Println("[+] Original files in directory removed.")
+		}
 	}
-
 }
